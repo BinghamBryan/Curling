@@ -9,12 +9,38 @@ local scene = storyboard.newScene()
 
 -- include Corona's "physics" library
 local physics = require "physics"
-physics.start(); physics.pause()
+physics.start();
+physics.setGravity( 0, 0 ); 
+physics.pause();
 
 --------------------------------------------
 
 -- forward declarations and other locals
 local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth*0.5
+
+local background, puck;
+
+--Methods
+local function shoot(e)
+	if(e.phase == 'moved') then
+
+	elseif(e.phase == 'ended') then
+		print("shot")
+		puck:applyForce(-(puck.x - e.x), -(puck.y - e.y), puck.x, puck.y)
+		
+		-- Prevent Ball from being hit when moving
+		--puck:removeEventListener('touch', shoot)
+		
+		-- Stop Ball after a few seconds
+		--local stopBall = timer.performWithDelay(5000, function() puck:setLinearVelocity(0, 0, puck.x, puck.y) puck:addEventListener('touch', shoot) end, 1)
+	end
+end
+
+local function onCollision(e)
+	if(e.other.name == 'puck') then
+		
+	end
+end
 
 -----------------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
@@ -29,33 +55,38 @@ function scene:createScene( event )
 	local group = self.view
 
 	-- create a grey rectangle as the backdrop
-	local background = display.newRect( 0, 0, screenW, screenH )
+	background = display.newRect( 0, 0, screenW, screenH )
 	background.anchorX = 0
 	background.anchorY = 0
-	background:setFillColor( .5 )
+	background:setFillColor( .9 )
 	
-	-- make a crate (off-screen), position it, and rotate slightly
-	local crate = display.newImageRect( "crate.png", 90, 90 )
-	crate.x, crate.y = 160, -100
-	crate.rotation = 15
+	-- make a puck
+	puck = display.newCircle( halfW, screenH - 50, 20 )
+	puck.name = 'puck';
+	puck:setFillColor(0.7);
+	puck:setStrokeColor( 0, 0, 1 );
+	puck.strokeWidth = 5;
 	
-	-- add physics to the crate
-	physics.addBody( crate, { density=1.0, friction=0.3, bounce=0.3 } )
+	-- add physics to the puck
+	physics.addBody( puck, 'dynamic', { density=1.0, friction=0.3, bounce=0.3, radius=20 } )
 	
 	-- create a grass object and add physics (with custom shape)
-	local grass = display.newImageRect( "grass.png", screenW, 82 )
-	grass.anchorX = 0
-	grass.anchorY = 1
-	grass.x, grass.y = 0, display.contentHeight
+	--local grass = display.newImageRect( "grass.png", screenW, 82 )
+	--grass.anchorX = 0
+	--grass.anchorY = 1
+	--grass.x, grass.y = 0, display.contentHeight
 	
 	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
-	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
-	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
+	--local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
+	--physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
 	
 	-- all display objects must be inserted into group
 	group:insert( background )
-	group:insert( grass)
-	group:insert( crate )
+	--group:insert( grass)
+	group:insert( puck )
+
+	--Events
+	background:addEventListener( 'touch', shoot );
 end
 
 -- Called immediately after scene has moved onscreen:
