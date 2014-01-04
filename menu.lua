@@ -37,13 +37,13 @@ function scene:createScene( event )
 	local group = self.view
 
 	-- display a background image
-	local background = display.newImageRect( "background.jpg", display.contentWidth, display.contentHeight )
+	local background = display.newImageRect( "images/background.jpg", display.contentWidth, display.contentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x, background.y = 0, 0
 	
 	-- create/position logo/title image on upper-half of the screen
-	local titleLogo = display.newImageRect( "logo.png", 264, 42 )
+	local titleLogo = display.newImageRect( "images/logo.png", 264, 42 )
 	titleLogo.x = display.contentWidth * 0.5
 	titleLogo.y = 100
 	

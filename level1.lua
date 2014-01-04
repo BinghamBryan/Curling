@@ -18,7 +18,7 @@ physics.pause();
 -- forward declarations and other locals
 local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth*0.5
 
-local background, puck;
+local background, lines, faultLine, blueCircle, redCircle, sochiLogo, circleLogo, lights, puck;
 
 --Methods
 local function shoot(e)
@@ -29,10 +29,10 @@ local function shoot(e)
 		puck:applyForce(-(puck.x - e.x), -(puck.y - e.y), puck.x, puck.y)
 		
 		-- Prevent Ball from being hit when moving
-		--puck:removeEventListener('touch', shoot)
+		puck:removeEventListener('touch', shoot)
 		
 		-- Stop Ball after a few seconds
-		--local stopBall = timer.performWithDelay(5000, function() puck:setLinearVelocity(0, 0, puck.x, puck.y) puck:addEventListener('touch', shoot) end, 1)
+		local stopBall = timer.performWithDelay(3000, function() puck:setLinearVelocity(0, 0, puck.x, puck.y) puck:addEventListener('touch', shoot) end, 1)
 	end
 end
 
@@ -54,18 +54,39 @@ end
 function scene:createScene( event )
 	local group = self.view
 
-	-- create a grey rectangle as the backdrop
-	background = display.newRect( 0, 0, screenW, screenH )
+	-- create ice
+	background = display.newImageRect( "images/Icebg.jpg", screenW, screenH )
 	background.anchorX = 0
 	background.anchorY = 0
-	background:setFillColor( .9 )
+
+	lines = display.newImageRect( "images/linesStandard.png", screenW, screenH );
+	lines.anchorX = 0;
+	lines.anchorY = 0;
+
+	faultLine = display.newImage( "images/faultLine.png" );
+	faultLine.x = halfW;
+	faultLine.y = screenH - 228;
+
+	sochiLogo = display.newImage( "images/iceLogoLarge.png" );
+	sochiLogo.x, sochiLogo.y = halfW, screenH - 340;
+
+	blueCircle = display.newImage( "images/circleBlue.png" );
+	blueCircle.x, blueCircle.y = halfW, 156;
+
+	redCircle = display.newImage( "images/circleRed.png" );
+	redCircle.x, redCircle.y = halfW, 156;
+
+	circleLogo = display.newImage( "images/iceLogoSmall.png" );
+	circleLogo.x, circleLogo.y = halfW, 156;
+
+	lights = display.newImageRect( "images/lights.png", screenW, screenH );
+	lights.anchorX = 0;
+	lights.anchorY = 0;
 	
 	-- make a puck
-	puck = display.newCircle( halfW, screenH - 50, 20 )
+	puck = display.newImage( "images/rock.png");
+	puck.x, puck.y = halfW, screenH - 100;
 	puck.name = 'puck';
-	puck:setFillColor(0.7);
-	puck:setStrokeColor( 0, 0, 1 );
-	puck.strokeWidth = 5;
 	
 	-- add physics to the puck
 	physics.addBody( puck, 'dynamic', { density=1.0, friction=0.3, bounce=0.3, radius=20 } )
@@ -82,7 +103,14 @@ function scene:createScene( event )
 	
 	-- all display objects must be inserted into group
 	group:insert( background )
-	--group:insert( grass)
+	group:insert( lines );
+	group:insert( faultLine );
+	group:insert( sochiLogo );
+	group:insert( blueCircle );
+	group:insert( redCircle );
+	group:insert( circleLogo );
+	group:insert( lights );
+	
 	group:insert( puck )
 
 	--Events
