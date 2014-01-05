@@ -18,7 +18,10 @@ physics.pause();
 -- forward declarations and other locals
 local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth*0.5
 
-local background, lines, faultLine, blueCircle, redCircle, sochiLogo, circleLogo, lights, puck;
+local background, lines, faultLine, blueCircle, redCircle, sochiLogo, circleLogo, lights;
+
+local pucks;
+local activePuckIndex = 1;
 
 --Methods
 local function shoot(e)
@@ -26,13 +29,13 @@ local function shoot(e)
 
 	elseif(e.phase == 'ended') then
 		print("shot")
-		puck:applyForce(-(puck.x - e.x), -(puck.y - e.y), puck.x, puck.y)
+		pucks[activePuckIndex]:applyForce(-(pucks[activePuckIndex].x - e.x), -(pucks[activePuckIndex].y - e.y), pucks[activePuckIndex].x, pucks[activePuckIndex].y)
 		
 		-- Prevent Ball from being hit when moving
-		puck:removeEventListener('touch', shoot)
+		pucks[activePuckIndex]:removeEventListener('touch', shoot)
 		
-		-- Stop Ball after a few seconds
-		local stopBall = timer.performWithDelay(3000, function() puck:setLinearVelocity(0, 0, puck.x, puck.y) puck:addEventListener('touch', shoot) end, 1)
+		-- tell game pucks is moving after some time
+		timer.performWithDelay(1000, function()  pucks[activePuckIndex].isMoving = true; end, 1)
 	end
 end
 
@@ -41,6 +44,28 @@ local function onCollision(e)
 		
 	end
 end
+
+local function gameLoop(event)
+	if (pucks[activePuckIndex] ~= nil) then
+		local vx, vy = pucks[activePuckIndex]:getLinearVelocity( );
+		--print(vx .. "-" .. vy);
+		if (vy < 0.1 and pucks[activePuckIndex].isMoving) then
+			if (activePuckIndex < 8) then
+				pucks[activePuckIndex].isMoving = false;
+
+				--Next Puck
+				activePuckIndex = activePuckIndex + 1;
+				print(activePuckIndex);
+				pucks[activePuckIndex].y = pucks[activePuckIndex].y - 200;
+				physics.addBody( pucks[activePuckIndex], 'dynamic', { density=1.0, friction=1, bounce=0.3, radius=15 } )
+				pucks[activePuckIndex].linearDamping = 0.5;
+				pucks[activePuckIndex]:addEventListener( 'touch', shoot );
+			end
+		end
+	end
+end
+
+Runtime:addEventListener("enterFrame", gameLoop);
 
 -----------------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
@@ -83,24 +108,19 @@ function scene:createScene( event )
 	lights.anchorX = 0;
 	lights.anchorY = 0;
 	
-	-- make a puck
-	puck = display.newImage( "images/rock.png");
-	puck.x, puck.y = halfW, screenH - 100;
-	puck.name = 'puck';
-	
-	-- add physics to the puck
-	physics.addBody( puck, 'dynamic', { density=1.0, friction=0.3, bounce=0.3, radius=20 } )
-	
-	-- create a grass object and add physics (with custom shape)
-	--local grass = display.newImageRect( "grass.png", screenW, 82 )
-	--grass.anchorX = 0
-	--grass.anchorY = 1
-	--grass.x, grass.y = 0, display.contentHeight
-	
-	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
-	--local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
-	--physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
-	
+	-- make pucks
+	pucks = display.newGroup( );
+
+	for i=1, 8 do
+		local puck =  display.newImage( "images/rock.png");
+		puck.x, puck.y = halfW, screenH + 100;
+		puck.isAlive = false;
+		puck.isMoving = false;
+		puck.name = 'puck' .. i;
+		puck.id = i;
+		pucks:insert(puck);
+	end
+
 	-- all display objects must be inserted into group
 	group:insert( background )
 	group:insert( lines );
@@ -110,11 +130,18 @@ function scene:createScene( event )
 	group:insert( redCircle );
 	group:insert( circleLogo );
 	group:insert( lights );
+	group:insert( pucks );
 	
-	group:insert( puck )
+
+	--Start Game
+	pucks[1].isAlive = true;
+	pucks[1].y = pucks[1].y - 200;
+	physics.addBody( pucks[1], 'dynamic', { density=1.0, friction=1, bounce=0.3, radius=20 } )
+	pucks[1].linearDamping = 0.5;
+	background:addEventListener( 'touch', shoot );
 
 	--Events
-	background:addEventListener( 'touch', shoot );
+	
 end
 
 -- Called immediately after scene has moved onscreen:
